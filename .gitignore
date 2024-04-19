@@ -1,0 +1,6 @@
+*.exe
+*.log
+*.bat
+.idea
+.vscode
+/@draft/
