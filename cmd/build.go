@@ -19,18 +19,12 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/input"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-)
-
-const (
-	buildDirectoryDefaultConst   = "."
-	templateFileNameDefaultConst = "docker-compose-dcm.yml"
-	servicesDirectoryConst       = "services"
-	composeFileNameConst         = "docker-compose.yml"
 )
 
 // buildCmd represents the build command
@@ -44,27 +38,27 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("build called")
+		//fmt.Println("build called")
 
 		//Read the flags
-		templateDirectory, _ := cmd.Flags().GetString("directory")
+		buildDirectory, _ := cmd.Flags().GetString("directory")
 		templateFileName, _ := cmd.Flags().GetString("template")
 		composeFileName, _ := cmd.Flags().GetString("compose")
 		forceOverwrite, _ := cmd.Flags().GetBool("force")
 
 		//Show the parameters
-		fmt.Printf("Buuild directory: %v\n", templateDirectory)
+		fmt.Printf("Buuild directory: %v\n", buildDirectory)
 		fmt.Printf("Template file: %v\n", templateFileName)
 		fmt.Printf("Services directory: %v\n", servicesDirectoryConst)
 		fmt.Printf("Compose file: %v\n", composeFileName)
 		fmt.Printf("Force overwrite: %v\n", cmd.Flags().Lookup("force").Value.String())
-		templateFilePath := filepath.Join(templateDirectory, templateFileName)
-		serviceDirectoryPath := filepath.Join(templateDirectory, servicesDirectoryConst)
-		composeFilePath := filepath.Join(templateDirectory, composeFileName)
+		templateFilePath := filepath.Join(buildDirectory, templateFileName)
+		serviceDirectoryPath := filepath.Join(buildDirectory, servicesDirectoryConst)
+		composeFilePath := filepath.Join(buildDirectory, composeFileName)
 		// Check if the directory exists
-		_, err := os.Stat(templateDirectory)
+		_, err := os.Stat(buildDirectory)
 		if err != nil {
-			fmt.Printf("Build directory '%v' not exists\n", templateDirectory)
+			fmt.Printf("Build directory '%v' not exists\n", buildDirectory)
 			return
 		}
 		// Check if the template file exists
@@ -82,11 +76,9 @@ to quickly create a Cobra application.`,
 		// Check if the compose file exists
 		_, err = os.Stat(composeFilePath)
 		if !forceOverwrite && err == nil {
-			reader := bufio.NewReader(os.Stdin)
-			fmt.Printf("Compose file '%v' already exists. Overwrite [y/N]?", composeFileNameConst)
-			answer, _ := reader.ReadString('\n')
-			answer = strings.ToLower(strings.TrimSpace(answer))
-			if answer != "y" {
+			fmt.Printf("Compose file '%v' already exists. Overwrite[y/N]?", composeFileNameConst)
+			answer := input.AskForYesOrNot("y", "N")
+			if !answer {
 				fmt.Println("Operation canceled")
 				return
 			}
@@ -143,17 +135,9 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(buildCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// buildCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// buildCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	buildCmd.Flags().StringP("directory", "d", buildDirectoryDefaultConst, "Specify the directory to build")
+	wd, _ := os.Getwd()
+	buildCmd.Flags().StringP("directory", "d", wd, "Specify the directory to build")
 	buildCmd.Flags().StringP("template", "t", templateFileNameDefaultConst, "Specify the template file to build")
 	buildCmd.Flags().StringP("compose", "c", composeFileNameConst, "Specify the compose file to build")
-	buildCmd.Flags().BoolP("force", "f", false, "Force overwrite the compose file")
+	buildCmd.Flags().BoolP("force", "f", false, "Force overwrite")
 }

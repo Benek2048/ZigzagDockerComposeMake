@@ -1,3 +1,5 @@
+all: build build-linux build-rpi
+
 build:
 	go build -o dcm.exe -ldflags "-s -w" github.com/Benek2048/ZigzagDockerComposeMake
 build-linux:
