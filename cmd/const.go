@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 const (
+	versionConst                 = "1.0.0"
 	templateFileNameDefaultConst = "docker-compose-dcm.yml"
 	servicesDirectoryConst       = "services"
 	composeFileNameConst         = "docker-compose.yml"

@@ -38,13 +38,8 @@ type DockerCompose struct {
 // decomposeCmd represents the decompose command
 var decomposeCmd = &cobra.Command{
 	Use:   "decompose",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Breaking down the 'docker-compose.yml' file into individual service files",
+	Long:  `Based on the 'docker-compose.yml' file, service files will be created in the 'services' folder.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		//fmt.Println("decompose called")
 
@@ -78,7 +73,7 @@ to quickly create a Cobra application.`,
 			cobra.CheckErr(err)
 		}
 		if exists && !forceOverwrite {
-			fmt.Printf("Compose file '%v' already exists. Overwrite[y/N]?", composeFileName)
+			fmt.Printf("Compose file '%v' already exists. Overwrite[y/N]?", templateFilePath)
 			answer := input.AskForYesOrNot("y", "N")
 			if !answer {
 				fmt.Println("Operation canceled")
