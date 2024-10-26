@@ -17,17 +17,13 @@ limitations under the License.
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/input"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/path"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-	"log"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 type Service map[string]interface{}
@@ -52,20 +48,29 @@ var decomposeCmd = &cobra.Command{
 
 		//Show the parameters
 		fmt.Printf("Build directory: %v\n", buildDirectory)
-		fmt.Printf("Template fileSrc: %v\n", templateFileName)
-		fmt.Printf("Services directory: %v\n", servicesDirectoryConst)
-		fmt.Printf("Compose fileSrc: %v\n", composeFileName)
+		fmt.Printf("Template file: %v\n", templateFileName)
+		fmt.Printf("Services directory: %v\n", logic.ServicesDirectoryConst)
+		fmt.Printf("Compose file: %v\n", composeFileName)
 		fmt.Printf("Force overwrite: %v\n", cmd.Flags().Lookup("force").Value.String())
 		templateFilePath := filepath.Join(buildDirectory, templateFileName)
-		serviceDirectoryPath := filepath.Join(buildDirectory, servicesDirectoryConst)
+		serviceDirectoryPath := filepath.Join(buildDirectory, logic.ServicesDirectoryConst)
 		composeFilePath := filepath.Join(buildDirectory, composeFileName)
 
-		exists, err := path.IsExist(composeFilePath)
+		exists, err := path.IsExist(buildDirectory)
 		if err != nil {
 			cobra.CheckErr(err)
 		}
 		if !exists {
-			fmt.Printf("Compose fileSrc '%v' not exists\n", composeFileName)
+			fmt.Printf("Build directory '%v' not exists\n", buildDirectory)
+			return
+		}
+
+		exists, err = path.IsExist(composeFilePath)
+		if err != nil {
+			cobra.CheckErr(err)
+		}
+		if !exists {
+			fmt.Printf("Compose file '%v' not exists\n", composeFileName)
 			return
 		}
 
@@ -73,185 +78,47 @@ var decomposeCmd = &cobra.Command{
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-		if !exists && !forceOverwrite {
-			fmt.Printf("Compose fileSrc '%v' already exists. Overwrite[y/N]?", templateFilePath)
+		if exists && !forceOverwrite {
+			fmt.Printf("Template file '%v' already exists. Overwrite[y/N]?", templateFilePath)
 			answer := input.AskForYesOrNot("y", "N")
 			if !answer {
 				fmt.Println("Operation canceled")
 				return
 			}
+			// Create backup of existing file before overwriting
+			if err := path.BackupExistingFile(templateFilePath); err != nil {
+				fmt.Printf("Error creating backup: %v\n", err)
+				return
+			}
 		}
 
-		fileTemplate, err := os.Open(templateFilePath)
+		exists, err = path.IsExist(serviceDirectoryPath)
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-		defer func(file *os.File) {
-			err := file.Close()
-			cobra.CheckErr(err)
-		}(fileTemplate)
-
-		exists, err = path.IsExist(buildDirectory)
-		if err != nil {
-			fmt.Printf("Build directory '%v' not exists\n", buildDirectory)
-			return
-		}
-		fileSrc, err := os.Open("docker-compose.yml")
-		if err != nil {
-			cobra.CheckErr(err)
-		}
-		defer func(file *os.File) {
-			err := file.Close()
-			cobra.CheckErr(err)
-		}(fileSrc)
-
-		err = os.Mkdir(serviceDirectoryPath, 0755)
-		if err != nil && !os.IsExist(err) {
-			panic(err)
+		if exists && !forceOverwrite {
+			fmt.Printf("Service directory '%v' already exists. Overwrite[y/N]?", serviceDirectoryPath)
+			answer := input.AskForYesOrNot("y", "N")
+			if !answer {
+				fmt.Println("Operation canceled")
+				return
+			}
+			// Create backup of existing directory before overwriting
+			if err := path.BackupExistingDirectory(serviceDirectoryPath); err != nil {
+				fmt.Printf("Error creating backup: %v\n", err)
+				return
+			}
 		}
 
-		noComments, _ := cmd.Flags().GetBool("format")
-		splitWorkByFlags(fileSrc, fileTemplate, noComments)
+		decomposer := logic.NewServiceDecomposer(
+			composeFilePath,      // fileSrc
+			templateFilePath,     // fileTemplate
+			serviceDirectoryPath, // servicesDir
+		)
+		if err := decomposer.Decompose(); err != nil {
+			cobra.CheckErr(err)
+		}
 	},
-}
-
-// splitWorkByFlags function which splits work based on flags
-// splitWorkByFlags is a function that takes a file pointer and a boolean flag as input. It splits the work of decomposing a file based on the value of the flag. If the flag is true, it calls the DecomposeWithoutComments function. If the flag is false, it calls the DecomposeWithComments function.
-func splitWorkByFlags(fileSrc *os.File, fileTemplate *os.File, noComments bool) {
-	if noComments {
-		decomposeWithoutComments(fileSrc, fileTemplate)
-	} else {
-		decomposeWithComments(fileSrc, fileTemplate)
-	}
-}
-
-func decomposeWithoutComments(fileSrc *os.File, fileTemplate *os.File) {
-	var compose DockerCompose
-	decoder := yaml.NewDecoder(fileSrc)
-	err := decoder.Decode(&compose)
-	if err != nil {
-		panic(err)
-	}
-
-	for name, service := range compose.Services {
-		yamlData, err := marshalServiceData(name, service)
-		if err != nil {
-			panic(err)
-		}
-
-		err = writeServiceToFile(name, yamlData)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func marshalServiceData(name string, service Service) ([]byte, error) {
-	return yaml.Marshal(map[string]Service{name: service})
-}
-
-func writeServiceToFile(name string, data []byte) error {
-	serviceFile, err := os.Create(filepath.Join("services", name+".yml"))
-	if err != nil {
-		return err
-	}
-	defer func(serviceFile *os.File) {
-		err := serviceFile.Close()
-		cobra.CheckErr(err)
-	}(serviceFile)
-
-	_, err = serviceFile.Write(data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func decomposeWithComments(file *os.File, fileTemplate *os.File) {
-	scanner := bufio.NewScanner(file)
-
-	re := regexp.MustCompile(`(?s)^\s{2}(\w+):\s*$`)
-	startRe := regexp.MustCompile(`(?s)^services:\s*$`)
-	endRe := regexp.MustCompile(`(?s)^\w+:\s*$`)
-	startWriting := false
-
-	var err error
-	var currentFile *os.File
-	var builder strings.Builder
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		match := re.FindStringSubmatch(line)
-
-		if startRe.MatchString(line) {
-			startWriting = true
-			continue
-		}
-		if endRe.MatchString(line) {
-			startWriting = false
-			if currentFile != nil {
-				_, err = currentFile.WriteString(builder.String())
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-				err := currentFile.Close()
-				if err != nil {
-					return
-				}
-				currentFile = nil //final
-				builder.Reset()
-			}
-			continue
-		}
-
-		if startWriting && match != nil {
-			if currentFile != nil {
-				_, err = currentFile.WriteString(builder.String())
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-				err = currentFile.Close()
-				if err != nil {
-					return
-				}
-				currentFile = nil //final
-				builder.Reset()
-			}
-			newFile := filepath.Join("services", match[1]+".yml")
-			currentFile, err = os.Create(newFile)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println("Creating file: ", newFile)
-		}
-
-		if startWriting && currentFile != nil {
-			builder.WriteString(line + "\n")
-		}
-	}
-
-	if currentFile != nil {
-		if builder.String() == "" {
-			log.Panicf("WARNING: '%v' file is already closed and stringBuilder is empty\n", currentFile.Name())
-			//fmt.Printf("WARNING: '%v' file is already closed and stringBuilder is empty\n", currentFile.Name())
-		} else {
-			_, err = currentFile.WriteString(builder.String())
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			err = currentFile.Close()
-			cobra.CheckErr(err)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println(err)
-	}
-
 }
 
 func init() {
@@ -259,9 +126,7 @@ func init() {
 
 	wd, _ := os.Getwd()
 	decomposeCmd.Flags().StringP("directory", "d", wd, "Specify the directory to build")
-	decomposeCmd.Flags().StringP("template", "t", templateFileNameDefaultConst, "Specify the template file to build")
-	decomposeCmd.Flags().StringP("compose", "c", composeFileNameConst, "Specify the compose file to build")
+	decomposeCmd.Flags().StringP("template", "t", logic.TemplateFileNameDefaultConst, "Specify the template file to build")
+	decomposeCmd.Flags().StringP("compose", "c", logic.ComposeFileNameConst, "Specify the compose file to build")
 	decomposeCmd.Flags().BoolP("force", "f", false, "Force overwrite")
-
-	decomposeCmd.Flags().BoolP("format", "", false, "format and delete comments")
 }
