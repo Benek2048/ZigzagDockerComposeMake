@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/input"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/path"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -120,6 +121,12 @@ var buildCmd = &cobra.Command{
 			if err := scanner.Err(); err != nil {
 				panic(err)
 			}
+		}
+
+		// Create backup of existing file before overwriting
+		if err := path.BackupExistingFile(composeFilePath); err != nil {
+			fmt.Printf("Error creating backup: %v\n", err)
+			return
 		}
 
 		finalContent := strings.Replace(templateContent, "<dcm: include services\\>", servicesContent.String(), 1)
