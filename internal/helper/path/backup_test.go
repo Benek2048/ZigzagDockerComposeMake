@@ -183,3 +183,170 @@ func TestBackupExistingFile(t *testing.T) {
 		})
 	}
 }
+
+// TestCreateBackupDirectoryName verifies that the CreateBackupDirectoryName function:
+// - Generates correct date-based backup names
+// - Handles existing directories by adding incremental numbers
+// - Returns paths that don't conflict with existing directories
+func TestCreateBackupDirectoryName(t *testing.T) {
+	tempDir := t.TempDir()
+
+	tests := []struct {
+		name           string
+		setupDirs      []string // Directories to create before test
+		expectedSuffix string   // Expected suffix in the generated name
+		originalName   string   // Name of the original directory
+	}{
+		{
+			name:           "fresh_backup_no_existing_directories",
+			setupDirs:      []string{},
+			expectedSuffix: time.Now().Format("20060102"),
+			originalName:   "testdir",
+		},
+		{
+			name: "existing_base_backup",
+			setupDirs: []string{
+				fmt.Sprintf("testdir-%s", time.Now().Format("20060102")),
+			},
+			expectedSuffix: fmt.Sprintf("%s.1", time.Now().Format("20060102")),
+			originalName:   "testdir",
+		},
+		{
+			name: "multiple_existing_backups",
+			setupDirs: []string{
+				fmt.Sprintf("testdir-%s", time.Now().Format("20060102")),
+				fmt.Sprintf("testdir-%s.1", time.Now().Format("20060102")),
+				fmt.Sprintf("testdir-%s.2", time.Now().Format("20060102")),
+			},
+			expectedSuffix: fmt.Sprintf("%s.3", time.Now().Format("20060102")),
+			originalName:   "testdir",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testDir := filepath.Join(tempDir, t.Name())
+			if err := os.MkdirAll(testDir, 0755); err != nil {
+				t.Fatalf("Failed to create test directory structure: %v", err)
+			}
+
+			// Create the original directory path
+			originalPath := filepath.Join(testDir, tt.originalName)
+			if err := os.Mkdir(originalPath, 0755); err != nil {
+				t.Fatalf("Failed to create test directory: %v", err)
+			}
+
+			// Create all setup directories
+			for _, dirName := range tt.setupDirs {
+				dirPath := filepath.Join(testDir, dirName)
+				if err := os.Mkdir(dirPath, 0755); err != nil {
+					t.Fatalf("Failed to create setup directory %s: %v", dirName, err)
+				}
+			}
+
+			// Call the function under test
+			result, err := CreateBackupDirectoryName(originalPath)
+			if err != nil {
+				t.Fatalf("CreateBackupDirectoryName failed: %v", err)
+			}
+
+			// Verify the result contains expected date pattern
+			if !strings.Contains(result, tt.expectedSuffix) {
+				t.Errorf("Expected backup name to contain suffix %s, got %s", tt.expectedSuffix, result)
+			}
+
+			// Verify the generated name doesn't exist yet
+			if _, err := os.Stat(result); err == nil {
+				t.Error("Generated backup directory name already exists")
+			}
+		})
+	}
+}
+
+// TestBackupExistingDirectory verifies that the BackupExistingDirectory function:
+// - Successfully renames existing directories
+// - Generates correct backup names
+// - Handles errors appropriately
+func TestBackupExistingDirectory(t *testing.T) {
+	tempDir := t.TempDir()
+
+	tests := []struct {
+		name                string
+		setupDirs           []string // Existing backup directories
+		expectedError       bool     // Whether we expect an error
+		expectedBackupCount int      // Expected number of backup directories after operation
+	}{
+		{
+			name:                "successful_backup",
+			setupDirs:           []string{},
+			expectedError:       false,
+			expectedBackupCount: 1, // Just the new backup
+		},
+		{
+			name: "backup_with_existing_directories",
+			setupDirs: []string{
+				fmt.Sprintf("testdir-%s", time.Now().Format("20060102")),
+			},
+			expectedError:       false,
+			expectedBackupCount: 2, // One existing + one new backup
+		},
+		{
+			name: "backup_with_multiple_existing_directories",
+			setupDirs: []string{
+				fmt.Sprintf("testdir-%s", time.Now().Format("20060102")),
+				fmt.Sprintf("testdir-%s.1", time.Now().Format("20060102")),
+			},
+			expectedError:       false,
+			expectedBackupCount: 3, // Two existing + one new backup
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testDir := filepath.Join(tempDir, t.Name())
+			if err := os.MkdirAll(testDir, 0755); err != nil {
+				t.Fatalf("Failed to create test directory structure: %v", err)
+			}
+
+			// Create setup directories
+			for _, dirName := range tt.setupDirs {
+				dirPath := filepath.Join(testDir, dirName)
+				if err := os.Mkdir(dirPath, 0755); err != nil {
+					t.Fatalf("Failed to create setup directory %s: %v", dirName, err)
+				}
+			}
+
+			// Create original directory to backup
+			originalPath := filepath.Join(testDir, "testdir")
+			if err := os.Mkdir(originalPath, 0755); err != nil {
+				t.Fatalf("Failed to create test directory: %v", err)
+			}
+
+			// Perform backup
+			err := BackupExistingDirectory(originalPath)
+
+			// Check error expectation
+			if (err != nil) != tt.expectedError {
+				t.Errorf("Expected error: %v, got error: %v", tt.expectedError, err)
+			}
+
+			if err == nil {
+				// Verify original directory doesn't exist anymore
+				if _, err := os.Stat(originalPath); err == nil {
+					t.Error("Original directory still exists after backup")
+				}
+
+				// Verify backup directories count
+				pattern := filepath.Join(testDir, fmt.Sprintf("testdir-%s*", time.Now().Format("20060102")))
+				matches, err := filepath.Glob(pattern)
+				if err != nil {
+					t.Fatalf("Failed to find backup directories: %v", err)
+				}
+				if len(matches) != tt.expectedBackupCount {
+					t.Errorf("Expected to find exactly %d backup directories, found %d",
+						tt.expectedBackupCount, len(matches))
+				}
+			}
+		})
+	}
+}
