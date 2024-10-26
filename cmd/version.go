@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +28,7 @@ var versionCmd = &cobra.Command{
 	Short: "Show version info.",
 	Long:  `Show version information of the program.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("v%s\n", versionConst)
+		fmt.Printf("v%s\n", logic.VersionConst)
 		fmt.Printf("ZigzagDockerComposeMake\n")
 		fmt.Printf("https://github.com/Benek2048/ZigzagDockerComposeMake\n")
 	},

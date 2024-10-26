@@ -1,4 +1,4 @@
-// Package cmd /*
+// Package logic /*
 /*
 Copyright © 2024 Benek <benek2048@gmail.com>
 
@@ -14,11 +14,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package logic
 
 const (
-	versionConst                 = "1.0.0"
-	templateFileNameDefaultConst = "docker-compose-dcm.yml"
-	servicesDirectoryConst       = "services"
-	composeFileNameConst         = "docker-compose.yml"
+	VersionConst                 = "1.0.0"
+	TemplateFileNameDefaultConst = "docker-compose-dcm.yml"
+	ServicesDirectoryConst       = "services"
+	ComposeFileNameConst         = "docker-compose.yml"
 )

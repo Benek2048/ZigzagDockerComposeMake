@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/input"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/path"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -48,34 +49,46 @@ var buildCmd = &cobra.Command{
 		//Show the parameters
 		fmt.Printf("Buuild directory: %v\n", buildDirectory)
 		fmt.Printf("Template file: %v\n", templateFileName)
-		fmt.Printf("Services directory: %v\n", servicesDirectoryConst)
+		fmt.Printf("Services directory: %v\n", logic.ServicesDirectoryConst)
 		fmt.Printf("Compose file: %v\n", composeFileName)
 		fmt.Printf("Force overwrite: %v\n", cmd.Flags().Lookup("force").Value.String())
 		templateFilePath := filepath.Join(buildDirectory, templateFileName)
-		serviceDirectoryPath := filepath.Join(buildDirectory, servicesDirectoryConst)
+		serviceDirectoryPath := filepath.Join(buildDirectory, logic.ServicesDirectoryConst)
 		composeFilePath := filepath.Join(buildDirectory, composeFileName)
+
 		// Check if the directory exists
-		_, err := os.Stat(buildDirectory)
+		exists, err := path.IsExist(buildDirectory)
 		if err != nil {
+			cobra.CheckErr(err)
+		}
+		if !exists {
 			fmt.Printf("Build directory '%v' not exists\n", buildDirectory)
 			return
 		}
-		// Check if the template file exists
-		_, err = os.Stat(templateFilePath)
+
+		exists, err = path.IsExist(templateFilePath)
 		if err != nil {
+			cobra.CheckErr(err)
+		}
+		if !exists {
 			fmt.Printf("Template file '%v 'not found\n", templateFileName)
 			return
 		}
+
 		// Check if the services directory exists
-		_, err = os.Stat(serviceDirectoryPath)
+		exists, err = path.IsExist(serviceDirectoryPath)
 		if err != nil {
-			fmt.Printf("Services directory '%v' not exists\n", servicesDirectoryConst)
+			cobra.CheckErr(err)
+		}
+		if !exists {
+			fmt.Printf("Services directory '%v' not exists\n", logic.ServicesDirectoryConst)
 			return
 		}
+
 		// Check if the compose file exists
-		_, err = os.Stat(composeFilePath)
-		if !forceOverwrite && err == nil {
-			fmt.Printf("Compose file '%v' already exists. Overwrite[y/N]?", composeFileNameConst)
+		composeFileExists, err := path.IsExist(composeFilePath)
+		if composeFileExists && !forceOverwrite {
+			fmt.Printf("Compose file '%v' already exists. Overwrite[y/N]?", logic.ComposeFileNameConst)
 			answer := input.AskForYesOrNot("y", "N")
 			if !answer {
 				fmt.Println("Operation canceled")
@@ -123,10 +136,12 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		// Create backup of existing file before overwriting
-		if err := path.BackupExistingFile(composeFilePath); err != nil {
-			fmt.Printf("Error creating backup: %v\n", err)
-			return
+		if composeFileExists {
+			// Create backup of existing file before overwriting
+			if err := path.BackupExistingFile(composeFilePath); err != nil {
+				fmt.Printf("Error creating backup: %v\n", err)
+				return
+			}
 		}
 
 		finalContent := strings.Replace(templateContent, "<dcm: include services\\>", servicesContent.String(), 1)
@@ -142,7 +157,7 @@ func init() {
 
 	wd, _ := os.Getwd()
 	buildCmd.Flags().StringP("directory", "d", wd, "Specify the directory to build")
-	buildCmd.Flags().StringP("template", "t", templateFileNameDefaultConst, "Specify the template file to build")
-	buildCmd.Flags().StringP("compose", "c", composeFileNameConst, "Specify the compose file to build")
+	buildCmd.Flags().StringP("template", "t", logic.TemplateFileNameDefaultConst, "Specify the template file to build")
+	buildCmd.Flags().StringP("compose", "c", logic.ComposeFileNameConst, "Specify the compose file to build")
 	buildCmd.Flags().BoolP("force", "f", false, "Force overwrite")
 }
