@@ -1,7 +1,7 @@
 # Makefile for building and testing the ZigzagDockerComposeMake project
 
 # Default target that runs all the main tasks
-all: test build build-linux build-rpi
+all: test build build-linux build-rpi install
 
 # Run tests with verbose output and without caching
 test:
