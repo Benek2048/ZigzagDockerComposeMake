@@ -23,6 +23,7 @@ import (
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/path"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -51,9 +52,9 @@ var decomposeCmd = &cobra.Command{
 
 		//Show the parameters
 		fmt.Printf("Build directory: %v\n", buildDirectory)
-		fmt.Printf("Template file: %v\n", templateFileName)
+		fmt.Printf("Template fileSrc: %v\n", templateFileName)
 		fmt.Printf("Services directory: %v\n", servicesDirectoryConst)
-		fmt.Printf("Compose file: %v\n", composeFileName)
+		fmt.Printf("Compose fileSrc: %v\n", composeFileName)
 		fmt.Printf("Force overwrite: %v\n", cmd.Flags().Lookup("force").Value.String())
 		templateFilePath := filepath.Join(buildDirectory, templateFileName)
 		serviceDirectoryPath := filepath.Join(buildDirectory, servicesDirectoryConst)
@@ -64,7 +65,7 @@ var decomposeCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		}
 		if !exists {
-			fmt.Printf("Compose file '%v' not exists\n", composeFileName)
+			fmt.Printf("Compose fileSrc '%v' not exists\n", composeFileName)
 			return
 		}
 
@@ -72,8 +73,8 @@ var decomposeCmd = &cobra.Command{
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-		if exists && !forceOverwrite {
-			fmt.Printf("Compose file '%v' already exists. Overwrite[y/N]?", templateFilePath)
+		if !exists && !forceOverwrite {
+			fmt.Printf("Compose fileSrc '%v' already exists. Overwrite[y/N]?", templateFilePath)
 			answer := input.AskForYesOrNot("y", "N")
 			if !answer {
 				fmt.Println("Operation canceled")
@@ -81,19 +82,28 @@ var decomposeCmd = &cobra.Command{
 			}
 		}
 
-		exists, err = path.IsExist(buildDirectory)
-		if err != nil {
-			fmt.Printf("Build directory '%v' not exists\n", buildDirectory)
-			return
-		}
-		file, err := os.Open("docker-compose.yml")
+		fileTemplate, err := os.Open(templateFilePath)
 		if err != nil {
 			cobra.CheckErr(err)
 		}
 		defer func(file *os.File) {
 			err := file.Close()
 			cobra.CheckErr(err)
-		}(file)
+		}(fileTemplate)
+
+		exists, err = path.IsExist(buildDirectory)
+		if err != nil {
+			fmt.Printf("Build directory '%v' not exists\n", buildDirectory)
+			return
+		}
+		fileSrc, err := os.Open("docker-compose.yml")
+		if err != nil {
+			cobra.CheckErr(err)
+		}
+		defer func(file *os.File) {
+			err := file.Close()
+			cobra.CheckErr(err)
+		}(fileSrc)
 
 		err = os.Mkdir(serviceDirectoryPath, 0755)
 		if err != nil && !os.IsExist(err) {
@@ -101,23 +111,23 @@ var decomposeCmd = &cobra.Command{
 		}
 
 		noComments, _ := cmd.Flags().GetBool("format")
-		splitWorkByFlags(file, noComments)
+		splitWorkByFlags(fileSrc, fileTemplate, noComments)
 	},
 }
 
 // splitWorkByFlags function which splits work based on flags
 // splitWorkByFlags is a function that takes a file pointer and a boolean flag as input. It splits the work of decomposing a file based on the value of the flag. If the flag is true, it calls the DecomposeWithoutComments function. If the flag is false, it calls the DecomposeWithComments function.
-func splitWorkByFlags(file *os.File, noComments bool) {
+func splitWorkByFlags(fileSrc *os.File, fileTemplate *os.File, noComments bool) {
 	if noComments {
-		decomposeWithoutComments(file)
+		decomposeWithoutComments(fileSrc, fileTemplate)
 	} else {
-		decomposeWithComments(file)
+		decomposeWithComments(fileSrc, fileTemplate)
 	}
 }
 
-func decomposeWithoutComments(file *os.File) {
+func decomposeWithoutComments(fileSrc *os.File, fileTemplate *os.File) {
 	var compose DockerCompose
-	decoder := yaml.NewDecoder(file)
+	decoder := yaml.NewDecoder(fileSrc)
 	err := decoder.Decode(&compose)
 	if err != nil {
 		panic(err)
@@ -157,7 +167,7 @@ func writeServiceToFile(name string, data []byte) error {
 	return nil
 }
 
-func decomposeWithComments(file *os.File) {
+func decomposeWithComments(file *os.File, fileTemplate *os.File) {
 	scanner := bufio.NewScanner(file)
 
 	re := regexp.MustCompile(`(?s)^\s{2}(\w+):\s*$`)
@@ -189,7 +199,7 @@ func decomposeWithComments(file *os.File) {
 				if err != nil {
 					return
 				}
-				//currentFile = nil
+				currentFile = nil //final
 				builder.Reset()
 			}
 			continue
@@ -206,7 +216,7 @@ func decomposeWithComments(file *os.File) {
 				if err != nil {
 					return
 				}
-				//currentFile = nil
+				currentFile = nil //final
 				builder.Reset()
 			}
 			newFile := filepath.Join("services", match[1]+".yml")
@@ -225,7 +235,8 @@ func decomposeWithComments(file *os.File) {
 
 	if currentFile != nil {
 		if builder.String() == "" {
-			fmt.Printf("WARNING: '%v' file is already closed and stringBuilder is empty\n", currentFile.Name())
+			log.Panicf("WARNING: '%v' file is already closed and stringBuilder is empty\n", currentFile.Name())
+			//fmt.Printf("WARNING: '%v' file is already closed and stringBuilder is empty\n", currentFile.Name())
 		} else {
 			_, err = currentFile.WriteString(builder.String())
 			if err != nil {
