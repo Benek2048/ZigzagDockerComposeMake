@@ -3,6 +3,10 @@
 # Default target that runs all the main tasks
 all: test build build-linux build-rpi install
 
+# Refresh Go module dependencies
+refresh:
+	go mod tidy -v
+
 # Run tests with verbose output and without caching
 test:
 	go test -v ./... -count=1
