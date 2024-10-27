@@ -17,8 +17,17 @@ limitations under the License.
 package logic
 
 const (
-	VersionConst                 = "1.0.0"
+	VersionConst = "1.0.0"
+
+	// TemplateFileNameDefaultConst is the default template filename
 	TemplateFileNameDefaultConst = "docker-compose-dcm.yml"
-	ServicesDirectoryConst       = "services"
-	ComposeFileNameConst         = "docker-compose.yml"
+
+	// ServicesDirectoryConst is the directory containing service definitions
+	ServicesDirectoryConst = "services"
+
+	// ComposeFileNameConst is the default output compose filename
+	ComposeFileNameConst = "docker-compose.yml"
+
+	// BuildDirectoryConst is the default build directory
+	BuildDirectoryConst = "."
 )
