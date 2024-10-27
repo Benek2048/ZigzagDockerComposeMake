@@ -1,0 +1,21 @@
+services:
+<dcm: include services\>
+
+volumes:
+  redis-data:
+    name: go-redis # Name of the volume
+
+networks:
+  innernet:
+    driver: bridge # Network driver to use
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "true" # Enable IP masquerading
+      com.docker.network.bridge.enable_icc: "true" # Enable inter-container communication
+      com.docker.network.driver.mtu: "1500" # Set the MTU for the network
+      com.docker.network.bridge.name: "${BRIDGE_NAME}" # Name of the bridge
+    name: "${NET_NAME}" # Name of the network
+    ipam:
+      driver: default # IPAM driver to use
+      config:
+        - subnet: 10.1.${NET_ID}.0/24 # Subnet configuration for the network
+

@@ -1,0 +1,15 @@
+  redis:
+    image: redis:alpine # Redis image to use
+    container_name: go-redis # Name of the container
+    networks:
+      - innernet # Network to which the container will be connected
+    ports:
+      - "6379:6379" # Port mapping for the container
+    volumes:
+      - redis-data:/data # Volume to persist Redis data
+    restart: unless-stopped # Restart policy for the container
+    logging:
+      driver: "json-file" # Logging driver to use
+      options:
+        max-size: "10m" # Maximum size of the log file
+        max-file: "10" # Maximum number of log files to retain
