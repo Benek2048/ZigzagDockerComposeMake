@@ -99,6 +99,7 @@ networks:
 
 	// Run the builder
 	builder := NewBuilder(
+		tempDir,
 		filepath.Join(tempDir, logic.TemplateFileNameDefaultConst),
 		filepath.Join(tempDir, logic.ServicesDirectoryConst),
 		filepath.Join(tempDir, logic.ComposeFileNameConst),
@@ -182,6 +183,7 @@ func TestBuilder_Build_NoTemplate(t *testing.T) {
 	tempDir := t.TempDir()
 
 	builder := NewBuilder(
+		tempDir,
 		filepath.Join(tempDir, logic.TemplateFileNameDefaultConst),
 		filepath.Join(tempDir, logic.ServicesDirectoryConst),
 		filepath.Join(tempDir, logic.ComposeFileNameConst),
@@ -207,6 +209,7 @@ func TestBuilder_Build_NoServicesDir(t *testing.T) {
 	}
 
 	builder := NewBuilder(
+		tempDir,
 		filepath.Join(tempDir, logic.TemplateFileNameDefaultConst),
 		filepath.Join(tempDir, logic.ServicesDirectoryConst),
 		filepath.Join(tempDir, logic.ComposeFileNameConst),
@@ -232,6 +235,7 @@ func TestBuilder_Build_ExistingOutput(t *testing.T) {
 	}
 
 	builder := NewBuilder(
+		tempDir,
 		filepath.Join(tempDir, logic.TemplateFileNameDefaultConst),
 		filepath.Join(tempDir, logic.ServicesDirectoryConst),
 		filepath.Join(tempDir, logic.ComposeFileNameConst),
