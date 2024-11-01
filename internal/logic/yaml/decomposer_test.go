@@ -1,6 +1,7 @@
-package logic
+package yaml
 
 import (
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
 	"os"
 	"path/filepath"
 	"strings"
@@ -139,9 +140,9 @@ redis: # Cache service
 `
 
 	// Create test files and directories
-	fileSrc := filepath.Join(tmpDir, ComposeFileNameConst)
-	fileTemplate := filepath.Join(tmpDir, TemplateFileNameDefaultConst)
-	servicesDir := filepath.Join(tmpDir, ServicesDirectoryConst)
+	fileSrc := filepath.Join(tmpDir, logic.ComposeFileNameConst)
+	fileTemplate := filepath.Join(tmpDir, logic.TemplateFileNameDefaultConst)
+	servicesDir := filepath.Join(tmpDir, logic.ServicesDirectoryConst)
 
 	// Write source file
 	err := os.WriteFile(fileSrc, []byte(sourceContent), 0644)
@@ -251,9 +252,9 @@ func TestServiceDecomposerPreservesCommentedValues(t *testing.T) {
       max-file: "10"
 `
 	// Create test files and directories
-	fileSrc := filepath.Join(tmpDir, ComposeFileNameConst)
-	fileTemplate := filepath.Join(tmpDir, TemplateFileNameDefaultConst)
-	servicesDir := filepath.Join(tmpDir, ServicesDirectoryConst)
+	fileSrc := filepath.Join(tmpDir, logic.ComposeFileNameConst)
+	fileTemplate := filepath.Join(tmpDir, logic.TemplateFileNameDefaultConst)
+	servicesDir := filepath.Join(tmpDir, logic.ServicesDirectoryConst)
 
 	// Write source file
 	err := os.WriteFile(fileSrc, []byte(sourceContent), 0644)

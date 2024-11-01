@@ -19,6 +19,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/text"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/yaml"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -38,6 +40,7 @@ definitions in the 'services' directory and merges them with the template file
 		templateFileName, _ := cmd.Flags().GetString("template")
 		composeFileName, _ := cmd.Flags().GetString("compose")
 		forceOverwrite, _ := cmd.Flags().GetBool("force")
+		yamlMode, _ := cmd.Flags().GetBool("yaml")
 
 		// Show the parameters
 		fmt.Printf("Build directory: %v\n", buildDirectory)
@@ -51,17 +54,40 @@ definitions in the 'services' directory and merges them with the template file
 		serviceDirectoryPath := filepath.Join(buildDirectory, logic.ServicesDirectoryConst)
 		composeFilePath := filepath.Join(buildDirectory, composeFileName)
 
-		// Create builder with configuration
-		builder := logic.NewBuilder(
-			templateFilePath,     // template file path
-			serviceDirectoryPath, // services directory path
-			composeFilePath,      // output file path
-			forceOverwrite,       // force overwrite flag
-		)
+		//// Create builder with configuration
+		//builder := logic.NewBuilderYaml(
+		//	templateFilePath,     // template file path
+		//	serviceDirectoryPath, // services directory path
+		//	composeFilePath,      // output file path
+		//	forceOverwrite,       // force overwrite flag
+		//)
 
-		// Execute the build
-		if err := builder.Build(); err != nil {
-			cobra.CheckErr(err)
+		if !yamlMode {
+			builder := text.NewBuilder(
+				buildDirectory,       // build directory
+				templateFilePath,     // template file path
+				serviceDirectoryPath, // services directory path
+				composeFilePath,      // output file path
+				forceOverwrite,       // force overwrite flag
+			)
+
+			// Execute the build
+			if err := builder.Build(); err != nil {
+				cobra.CheckErr(err)
+			}
+		} else {
+			builder := yaml.NewBuilder(
+				buildDirectory,       // build directory
+				templateFilePath,     // template file path
+				serviceDirectoryPath, // services directory path
+				composeFilePath,      // output file path
+				forceOverwrite,       // force overwrite flag
+			)
+
+			// Execute the build
+			if err := builder.Build(); err != nil {
+				cobra.CheckErr(err)
+			}
 		}
 	},
 }
@@ -74,4 +100,5 @@ func init() {
 	buildCmd.Flags().StringP("template", "t", logic.TemplateFileNameDefaultConst, "Specify the template file to build")
 	buildCmd.Flags().StringP("compose", "c", logic.ComposeFileNameConst, "Specify the compose file to build")
 	buildCmd.Flags().BoolP("force", "f", false, "Force overwrite of existing compose file or services folder")
+	buildCmd.Flags().BoolP("yaml", "m", false, "Use YAML mode for processing")
 }

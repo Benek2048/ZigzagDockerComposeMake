@@ -1,7 +1,8 @@
-package logic
+package yaml
 
 import (
 	"fmt"
+	helper "github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/yaml/helper"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
@@ -65,24 +66,9 @@ func (d *ServiceDecomposer) parseSourceFile() (*yaml.Node, error) {
 	return &node, nil
 }
 
-// findServicesNode locates the services section in the YAML tree
-func findServicesNode(node *yaml.Node) *yaml.Node {
-	if node.Kind != yaml.DocumentNode {
-		return nil
-	}
-
-	rootMap := node.Content[0]
-	for i := 0; i < len(rootMap.Content); i += 2 {
-		if rootMap.Content[i].Value == "services" {
-			return rootMap.Content[i+1]
-		}
-	}
-	return nil
-}
-
 // extractServices extracts individual services and writes them to separate files
 func (d *ServiceDecomposer) extractServices(node *yaml.Node) error {
-	servicesNode := findServicesNode(node)
+	servicesNode := helper.FindServicesNode(node)
 	if servicesNode == nil {
 		return fmt.Errorf("services section not found in source file")
 	}
