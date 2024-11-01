@@ -21,6 +21,7 @@ import (
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/input"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/path"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/yaml"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -110,7 +111,7 @@ var decomposeCmd = &cobra.Command{
 			}
 		}
 
-		decomposer := logic.NewServiceDecomposer(
+		decomposer := yaml.NewServiceDecomposer(
 			composeFilePath,      // fileSrc
 			templateFilePath,     // fileTemplate
 			serviceDirectoryPath, // servicesDir

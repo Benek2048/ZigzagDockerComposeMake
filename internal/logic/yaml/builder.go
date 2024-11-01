@@ -2,6 +2,9 @@ package yaml
 
 import (
 	"fmt"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/input"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/path"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/yaml/helper"
 	"gopkg.in/yaml.v3"
 	"os"
@@ -31,9 +34,13 @@ func NewBuilder(buildDir, templatePath, servicesDir, outputPath string, forceOve
 
 // Build processes the template and service files to create a complete docker-compose.yml
 func (b *Builder) Build() error {
-	if !b.forceOverwrite {
-		if _, err := os.Stat(b.outputPath); err == nil {
-			return fmt.Errorf("output file %s already exists. Use --force to overwrite", b.outputPath)
+	// Check if the compose file exists
+	composeFileExists, err := path.IsExist(b.outputPath)
+	if composeFileExists && !b.forceOverwrite {
+		fmt.Printf("Compose file '%v' already exists. Overwrite[y/N]?", logic.ComposeFileNameConst)
+		answer := input.AskForYesOrNot("y", "N")
+		if !answer {
+			return fmt.Errorf("operation canceled")
 		}
 	}
 
@@ -53,6 +60,13 @@ func (b *Builder) Build() error {
 	err = b.mergeServices(templateNode, services)
 	if err != nil {
 		return fmt.Errorf("failed to merge services: %w", err)
+	}
+
+	if composeFileExists {
+		// Create backup of existing file before overwriting
+		if err := path.BackupExistingFile(b.outputPath); err != nil {
+			return fmt.Errorf("Error creating backup: %v\n", err)
+		}
 	}
 
 	// Write the final docker-compose.yml

@@ -35,12 +35,6 @@ func NewBuilder(buildDir, templatePath, servicesDir, outputPath string, forceOve
 
 // Build processes the template and service files to create a complete docker-compose.yml
 func (b *Builder) Build() error {
-	if !b.forceOverwrite {
-		if _, err := os.Stat(b.outputPath); err == nil {
-			return fmt.Errorf("output file %s already exists. Use --force to overwrite", b.outputPath)
-		}
-	}
-
 	// Check if the directory exists
 	exists, err := path.IsExist(b.buildDir)
 	if err != nil {

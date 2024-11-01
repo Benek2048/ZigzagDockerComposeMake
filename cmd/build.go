@@ -40,7 +40,7 @@ definitions in the 'services' directory and merges them with the template file
 		templateFileName, _ := cmd.Flags().GetString("template")
 		composeFileName, _ := cmd.Flags().GetString("compose")
 		forceOverwrite, _ := cmd.Flags().GetBool("force")
-		yamlMode, _ := cmd.Flags().GetBool("yaml")
+		yamlMode, _ := cmd.Flags().GetBool("yaml-mode")
 
 		// Show the parameters
 		fmt.Printf("Build directory: %v\n", buildDirectory)
@@ -55,14 +55,8 @@ definitions in the 'services' directory and merges them with the template file
 		composeFilePath := filepath.Join(buildDirectory, composeFileName)
 
 		//// Create builder with configuration
-		//builder := logic.NewBuilderYaml(
-		//	templateFilePath,     // template file path
-		//	serviceDirectoryPath, // services directory path
-		//	composeFilePath,      // output file path
-		//	forceOverwrite,       // force overwrite flag
-		//)
-
 		if !yamlMode {
+			fmt.Println("Text mode")
 			builder := text.NewBuilder(
 				buildDirectory,       // build directory
 				templateFilePath,     // template file path
@@ -76,6 +70,7 @@ definitions in the 'services' directory and merges them with the template file
 				cobra.CheckErr(err)
 			}
 		} else {
+			fmt.Println("Yaml mode")
 			builder := yaml.NewBuilder(
 				buildDirectory,       // build directory
 				templateFilePath,     // template file path
@@ -100,5 +95,5 @@ func init() {
 	buildCmd.Flags().StringP("template", "t", logic.TemplateFileNameDefaultConst, "Specify the template file to build")
 	buildCmd.Flags().StringP("compose", "c", logic.ComposeFileNameConst, "Specify the compose file to build")
 	buildCmd.Flags().BoolP("force", "f", false, "Force overwrite of existing compose file or services folder")
-	buildCmd.Flags().BoolP("yaml", "m", false, "Use YAML mode for processing")
+	buildCmd.Flags().BoolP("yaml-mode", "", false, "Use YAML mode for processing")
 }
