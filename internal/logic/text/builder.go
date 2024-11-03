@@ -99,7 +99,6 @@ func (b *Builder) Build() error {
 		}
 		scanner := bufio.NewScanner(strings.NewReader(string(data)))
 		for scanner.Scan() {
-			servicesContent.WriteString("  ") // indent
 			servicesContent.WriteString(scanner.Text())
 			servicesContent.WriteString("\n")
 		}
