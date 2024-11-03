@@ -145,5 +145,5 @@ func init() {
 	decomposeCmd.Flags().StringP("template", "t", logic.TemplateFileNameDefaultConst, "Specify the template file to build")
 	decomposeCmd.Flags().StringP("compose", "c", logic.ComposeFileNameConst, "Specify the compose file to build")
 	decomposeCmd.Flags().BoolP("force", "f", false, "Force overwrite")
-	buildCmd.Flags().BoolP("yaml-mode", "", false, "Use YAML mode for processing")
+	decomposeCmd.Flags().BoolP("yaml-mode", "", false, "Use YAML mode for processing")
 }
