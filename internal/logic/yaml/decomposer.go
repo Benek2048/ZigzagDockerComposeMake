@@ -2,10 +2,11 @@ package yaml
 
 import (
 	"fmt"
-	helper "github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/yaml/helper"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/yaml/helper"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -169,11 +170,8 @@ func (d *ServiceDecomposer) createTemplateFile(node *yaml.Node) error {
 	content := buf.String()
 
 	// Fix the services section formatting
-	content = strings.ReplaceAll(content, "services: |-\n  <dcm:", "services: \n<dcm:")
-	content = strings.ReplaceAll(content, "services: |2-\n  <dcm:", "services: \n<dcm:")
-	content = strings.ReplaceAll(content, "services: |\n  <dcm:", "services: \n<dcm:")
-	content = strings.ReplaceAll(content, "services: >-\n  <dcm:", "services: \n<dcm:")
-	content = strings.ReplaceAll(content, "services:\n  <dcm:", "services: \n<dcm:")
+	re := regexp.MustCompile(`(?m)^services:\s*(?:\|-?|[|>](?:[-+]|\d+[-+]?)?)?\s*(?:\n\s+)?<dcm:`)
+	content = re.ReplaceAllString(content, "services:\n<dcm:")
 
 	// Clean up duplicate newlines while preserving intended spacing
 	lines := strings.Split(content, "\n")
