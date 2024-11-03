@@ -75,7 +75,7 @@ networks:
 
 	// Expected content for generated files
 	expectedTemplate := `# Main docker-compose configuration
-services: 
+services:
 <dcm: include services\>
 
 # Volume configuration
