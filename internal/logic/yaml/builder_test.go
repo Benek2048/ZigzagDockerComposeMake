@@ -224,25 +224,134 @@ func TestBuilder_Build_NoServicesDir(t *testing.T) {
 func TestBuilder_Build_ExistingOutput(t *testing.T) {
 	tempDir := t.TempDir()
 
-	// Create test files
-	err := os.WriteFile(
-		filepath.Join(tempDir, logic.ComposeFileNameConst),
-		[]byte("existing content"),
-		0644,
-	)
-	if err != nil {
-		t.Fatalf("Failed to create existing output file: %v", err)
+	// Setup test cases with different scenarios
+	tests := []struct {
+		name           string
+		forceOverwrite bool
+		mockUserInput  string
+		expectedError  string
+	}{
+		{
+			name:           "reject_overwrite",
+			forceOverwrite: false,
+			mockUserInput:  "n\n", // Simulate user entering "n" for no
+			expectedError:  "operation canceled",
+		},
+		{
+			name:           "accept_overwrite",
+			forceOverwrite: false,
+			mockUserInput:  "y\n", // Simulate user entering "y" for yes
+			expectedError:  "",    // No error expected when user accepts
+		},
+		{
+			name:           "force_overwrite",
+			forceOverwrite: true,
+			mockUserInput:  "", // No input needed when force is true
+			expectedError:  "", // No error expected with force flag
+		},
 	}
 
-	builder := NewBuilder(
-		tempDir,
-		filepath.Join(tempDir, logic.TemplateFileNameDefaultConst),
-		filepath.Join(tempDir, logic.ServicesDirectoryConst),
-		filepath.Join(tempDir, logic.ComposeFileNameConst),
-		false, // forceOverwrite = false
-	)
+	// Create template and service files needed for the build process
+	templateContent := `version: '3'
+services:
+<dcm: include services\>
+volumes:
+  data: {}`
 
-	err = builder.Build()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "already exists")
+	serviceContent := `app:
+  image: test
+  ports:
+    - "8080:8080"`
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a pipe to simulate stdin for user input
+			oldStdin := os.Stdin
+			r, w, err := os.Pipe()
+			if err != nil {
+				t.Fatalf("Failed to create pipe: %v", err)
+			}
+			os.Stdin = r
+			defer func() {
+				os.Stdin = oldStdin
+			}()
+
+			// Write mock user input if provided
+			if tt.mockUserInput != "" {
+				_, err = w.WriteString(tt.mockUserInput)
+				if err != nil {
+					t.Fatalf("Failed to write mock input: %v", err)
+				}
+				w.Close()
+			}
+
+			// Create directory structure and required files
+			servicesDir := filepath.Join(tempDir, logic.ServicesDirectoryConst)
+			err = os.MkdirAll(servicesDir, 0755)
+			if err != nil {
+				t.Fatalf("Failed to create services directory: %v", err)
+			}
+
+			// Create template file
+			err = os.WriteFile(
+				filepath.Join(tempDir, logic.TemplateFileNameDefaultConst),
+				[]byte(templateContent),
+				0644,
+			)
+			if err != nil {
+				t.Fatalf("Failed to create template file: %v", err)
+			}
+
+			// Create service file
+			err = os.WriteFile(
+				filepath.Join(servicesDir, "app.yml"),
+				[]byte(serviceContent),
+				0644,
+			)
+			if err != nil {
+				t.Fatalf("Failed to create service file: %v", err)
+			}
+
+			// Create existing output file
+			err = os.WriteFile(
+				filepath.Join(tempDir, logic.ComposeFileNameConst),
+				[]byte("existing content"),
+				0644,
+			)
+			if err != nil {
+				t.Fatalf("Failed to create existing output file: %v", err)
+			}
+
+			builder := NewBuilder(
+				filepath.Join(tempDir, logic.BuildDirectoryConst),
+				filepath.Join(tempDir, logic.TemplateFileNameDefaultConst),
+				filepath.Join(tempDir, logic.ServicesDirectoryConst),
+				filepath.Join(tempDir, logic.ComposeFileNameConst),
+				tt.forceOverwrite,
+			)
+
+			// Execute the build
+			err = builder.Build()
+
+			// Verify the results
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				assert.NoError(t, err)
+
+				// Verify the file was actually overwritten
+				if tt.forceOverwrite || tt.mockUserInput == "y\n" {
+					content, err := os.ReadFile(filepath.Join(tempDir, logic.ComposeFileNameConst))
+					assert.NoError(t, err, "Expected output file to exist")
+					assert.NotEqual(t, "existing content", string(content), "Expected file content to be overwritten")
+
+					// Verify the generated content contains expected sections
+					assert.Contains(t, string(content), "version: '3'")
+					assert.Contains(t, string(content), "services:")
+					assert.Contains(t, string(content), "volumes:")
+				}
+			}
+		})
+	}
 }
