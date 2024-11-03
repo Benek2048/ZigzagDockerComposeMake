@@ -282,7 +282,10 @@ volumes:
 				if err != nil {
 					t.Fatalf("Failed to write mock input: %v", err)
 				}
-				w.Close()
+				err := w.Close()
+				if err != nil {
+					return
+				}
 			}
 
 			// Create directory structure and required files
