@@ -42,14 +42,24 @@ func (d *ServiceDecomposer) Decompose() error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Printf("Failed to close source file: %v\n", err)
+		}
+	}(file)
 
 	// Create template file
 	fileTemplate, err := os.Create(d.fileTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to create template file: %w", err)
 	}
-	defer fileTemplate.Close()
+	defer func(fileTemplate *os.File) {
+		err := fileTemplate.Close()
+		if err != nil {
+			fmt.Printf("Failed to close template file: %v\n", err)
+		}
+	}(fileTemplate)
 
 	scanner := bufio.NewScanner(file)
 	var templateBuilder strings.Builder
