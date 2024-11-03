@@ -21,17 +21,18 @@ import (
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/input"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/helper/path"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic"
+	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/text"
 	"github.com/Benek2048/ZigzagDockerComposeMake/internal/logic/yaml"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 )
 
-type Service map[string]interface{}
-
-type DockerCompose struct {
-	Services map[string]Service `yaml:"services"`
-}
+//type Service map[string]interface{}
+//
+//type DockerCompose struct {
+//	Services map[string]Service `yaml:"services"`
+//}
 
 // decomposeCmd represents the decompose command
 var decomposeCmd = &cobra.Command{
@@ -46,6 +47,7 @@ var decomposeCmd = &cobra.Command{
 		templateFileName, _ := cmd.Flags().GetString("template")
 		composeFileName, _ := cmd.Flags().GetString("compose")
 		forceOverwrite, _ := cmd.Flags().GetBool("force")
+		yamlMode, _ := cmd.Flags().GetBool("yaml-mode")
 
 		//Show the parameters
 		fmt.Printf("Build directory: %v\n", buildDirectory)
@@ -111,13 +113,26 @@ var decomposeCmd = &cobra.Command{
 			}
 		}
 
-		decomposer := yaml.NewServiceDecomposer(
-			composeFilePath,      // fileSrc
-			templateFilePath,     // fileTemplate
-			serviceDirectoryPath, // servicesDir
-		)
-		if err := decomposer.Decompose(); err != nil {
-			cobra.CheckErr(err)
+		if !yamlMode {
+			fmt.Println("Text mode")
+			decomposer := text.NewServiceDecomposer(
+				composeFilePath,      // fileSrc
+				templateFilePath,     // fileTemplate
+				serviceDirectoryPath, // servicesDir
+			)
+			if err := decomposer.Decompose(); err != nil {
+				cobra.CheckErr(err)
+			}
+		} else {
+			fmt.Println("Yaml mode")
+			decomposer := yaml.NewServiceDecomposer(
+				composeFilePath,      // fileSrc
+				templateFilePath,     // fileTemplate
+				serviceDirectoryPath, // servicesDir
+			)
+			if err := decomposer.Decompose(); err != nil {
+				cobra.CheckErr(err)
+			}
 		}
 	},
 }
@@ -130,4 +145,5 @@ func init() {
 	decomposeCmd.Flags().StringP("template", "t", logic.TemplateFileNameDefaultConst, "Specify the template file to build")
 	decomposeCmd.Flags().StringP("compose", "c", logic.ComposeFileNameConst, "Specify the compose file to build")
 	decomposeCmd.Flags().BoolP("force", "f", false, "Force overwrite")
+	buildCmd.Flags().BoolP("yaml-mode", "", false, "Use YAML mode for processing")
 }
