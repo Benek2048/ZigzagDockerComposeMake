@@ -55,7 +55,7 @@ jobs:
       
       # Step 7: Create GitHub release with built artifacts
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           # List all release files from bin directory
           files: |
@@ -63,7 +63,7 @@ jobs:
             bin/*.tar.gz
             bin/checksums.txt
           # Optional: Generate release notes from git commits
-          generate_release_notes: false
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
