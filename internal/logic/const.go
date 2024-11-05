@@ -16,8 +16,18 @@ limitations under the License.
 */
 package logic
 
+var (
+	// VersionConst will be set during build
+	VersionConst = "development"
+	// BuildTime will be set during build
+	BuildTime = "unknown"
+	// GitCommit will be set during build
+	GitCommit = "unknown"
+)
+
 const (
-	VersionConst = "1.0.0"
+	// RepositoryURLConst is the URL of the repository
+	RepositoryURLConst = "https://github.com/Benek2048/ZigzagDockerComposeMake"
 
 	// TemplateFileNameDefaultConst is the default template filename
 	TemplateFileNameDefaultConst = "docker-compose-dcm.yml"

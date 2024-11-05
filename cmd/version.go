@@ -26,11 +26,14 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version info.",
-	Long:  `Show version information of the program.`,
+	Long:  `Show version information of the program and compilation.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("v%s\n", logic.VersionConst)
-		fmt.Printf("ZigzagDockerComposeMake\n")
-		fmt.Printf("https://github.com/Benek2048/ZigzagDockerComposeMake\n")
+		const colWidth = 15
+		fmt.Printf("%-*s%s\n", colWidth, "Project:", "ZigzagDockerComposeMake")
+		fmt.Printf("%-*s%s\n", colWidth, "Version:", logic.VersionConst)
+		fmt.Printf("%-*s%s (UTC)\n", colWidth, "Build Time:", logic.BuildTime)
+		fmt.Printf("%-*s%s\n", colWidth, "Git Commit:", logic.GitCommit)
+		fmt.Printf("%-*s%s\n", colWidth, "Repository:", logic.RepositoryURLConst)
 	},
 }
 
