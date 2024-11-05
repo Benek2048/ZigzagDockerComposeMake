@@ -59,7 +59,7 @@ jobs:
             bin/*.tar.gz
             bin/checksums.txt
           # Optional: Generate release notes from git commits
-          generate_release_notes: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
