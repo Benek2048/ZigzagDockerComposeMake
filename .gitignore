@@ -5,3 +5,4 @@ dcm*
 .idea
 .vscode
 /@draft/
+/bin/

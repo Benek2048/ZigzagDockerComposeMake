@@ -1,0 +1,69 @@
+# Name of the GitHub Actions workflow
+name: Release
+
+# Define when this workflow will run
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v1.0.0)
+
+# Define the jobs to be executed
+jobs:
+  release:
+    # Specify the runner environment
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Check out the repository code
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+      
+      # Step 2: Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      # Step 3: Install and verify dependencies
+      - name: Install dependencies
+        run: make refresh
+      
+      # Step 4: Run test suite
+      - name: Run tests
+        run: make test
+      
+      # Step 5: Build all platform versions using Makefile targets
+      - name: Build all platforms
+        run: |
+          # Create bin directory if it doesn't exist
+          mkdir -p bin
+          # Build all platform versions using Makefile targets
+          make build        # Windows version
+          make build-linux  # Linux version
+          make build-rpi    # Raspberry Pi version
+          make build-darwin # macOS versions (both Intel and Apple Silicon)
+      
+      # Step 6: Create release archives using Makefile
+      - name: Create release archives
+        run: make release
+      
+      # Step 7: Create GitHub release with built artifacts
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          # List all release files from bin directory
+          files: |
+            bin/*.zip
+            bin/*.tar.gz
+            bin/checksums.txt
+          # Optional: Generate release notes from git commits
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 8: Cleanup artifacts
+      - name: Cleanup
+        if: always()  # Run even if previous steps failed
+        run: make clean
