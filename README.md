@@ -4,6 +4,8 @@
 
 This program is designed to split a docker-compose.yml file into smaller files and reassemble them back together.
 
+It aims to help with daily work with docker-compose.yml files by allowing easy monitoring of changes made within individual services and enabling simple reuse of service declarations across different projects.
+
 Main functions:
 - splitting (decomposition) of docker-compose.yml into a template and service files
 - assembling a complete docker-compose.yml from the template and service files
