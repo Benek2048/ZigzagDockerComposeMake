@@ -11,6 +11,7 @@ Main functions:
 - assembling a complete docker-compose.yml from the template and service files
 
 
+
 ## Usage Example
 
 ### Decomposition Example
