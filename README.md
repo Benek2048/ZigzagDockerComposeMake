@@ -10,7 +10,6 @@ Main functions:
 - splitting (decomposition) of docker-compose.yml into a template and service files
 - assembling a complete docker-compose.yml from the template and service files
 
-
 ## Usage Example
 
 ### Decomposition Example
