@@ -83,7 +83,7 @@ dcm decompose
 The program will create the following file structure:
 
 1. Template file docker-compose-dcm.yml:
-```yaml
+```
 # Docker Compose configuration for the Go-Redis application
 services:
 <dcm: include services\>
