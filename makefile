@@ -21,6 +21,10 @@ show_vars:
 # Default target that runs all the main tasks
 all: show_vars refresh test build build-linux build-rpi build-darwin install
 
+# Update dependencies
+update:
+	go get -u ./...
+
 # Refresh Go module dependencies
 refresh:
 	go mod tidy -v
