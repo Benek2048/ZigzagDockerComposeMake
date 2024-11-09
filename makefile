@@ -35,7 +35,9 @@ test:
 
 # Build the project for Windows
 build:
+	cp internal/assets/windows/rsrc_windows_amd64.syso ./
 	go build -o bin/$(BINARY_NAME).exe -ldflags "$(LDFLAGS)" github.com/Benek2048/ZigzagDockerComposeMake
+	rm rsrc_windows_amd64.syso
 
 # Build the project for Linux
 build-linux:
