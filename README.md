@@ -1,3 +1,5 @@
+![ZigZag Everyday Tools](internal/assets/logo/ZigZagEverydayTools.png "ZigZag Everyday Tools")
+
 # ZigzagDockerComposeMake
 
 ## Introduction
