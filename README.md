@@ -174,8 +174,8 @@ The program can operate in two modes:
   -d, --directory string    working directory (default: current)
   -t, --template string     template filename (default: docker-compose-dcm.yml)
   -c, --compose string      compose filename (default: docker-compose.yml)
-  -f, --force              force overwrite existing files
-      --yaml-mode          use yaml mode
+  -f, --force               force overwrite existing files
+      --yaml-mode           use yaml mode
 ```
 
 ### For build command:
@@ -183,30 +183,30 @@ The program can operate in two modes:
   -d, --directory string    working directory (default: current)
   -t, --template string     template filename (default: docker-compose-dcm.yml)
   -c, --compose string      compose filename (default: docker-compose.yml)
-  -f, --force              force overwrite existing files
-      --yaml-mode          use yaml mode
+  -f, --force               force overwrite existing files
+      --yaml-mode           use yaml mode
 ```
 
 ## Project Structure
 
 ```
 .
-├── cmd/                    # CLI Commands
-│   ├── build.go           # Build command implementation
-│   ├── decompose.go       # Decompose command implementation
-│   ├── root.go            # Main CLI configuration
-│   └── version.go         # Version display command
+├── cmd/                 # CLI Commands
+│   ├── build.go         # Build command implementation
+│   ├── decompose.go     # Decompose command implementation
+│   ├── root.go          # Main CLI configuration
+│   └── version.go       # Version display command
 │
-├── internal/              # Internal application code
-│   ├── assets/           # Static assets
-│   ├── helper/           # Helper functions
+├── internal/            # Internal application code
+│   ├── assets/          # Static assets
+│   ├── helper/          # Helper functions
 │   │   ├── input/       # User input handling
 │   │   └── path/        # Path operations
 │   └── logic/           # Main business logic
 │       ├── text/        # Text mode implementation
 │       └── yaml/        # YAML mode implementation
 │
-├── bin/                  # Directory for executables
+├── bin/                 # Directory for executables
 └── Makefile             # Compilation and testing scripts
 ```
 
@@ -217,7 +217,7 @@ The project uses Makefile to automate the build process. The following commands 
 ### Basic commands:
 
 ```bash
-make all           # Executes all main tasks (test, build, build-linux, build-rpi, install)
+make all          # Executes all main tasks (test, build, build-linux, build-rpi, install)
 make test         # Runs unit tests
 make build        # Builds program for Windows (dcm.exe)
 make install      # Installs program in GOBIN path
