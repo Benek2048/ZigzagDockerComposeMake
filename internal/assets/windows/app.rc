@@ -1,0 +1,12 @@
+/*
+Important requirements:
+- File must end with two empty lines
+- File must use Windows line endings (CRLF)
+- File must be saved in ASCII or UTF-8 without BOM format
+*/
+
+#include "resource.h"
+
+// Icon
+IDI_ICON1 ICON "../logo/ZigzagEverydayTools.ico"
+
