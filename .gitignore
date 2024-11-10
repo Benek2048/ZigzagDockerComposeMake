@@ -4,5 +4,6 @@ dcm*
 *.bat
 .idea
 .vscode
+.fleet
 /@draft/
 /bin/

@@ -21,6 +21,10 @@ show_vars:
 # Default target that runs all the main tasks
 all: show_vars refresh test build build-linux build-rpi build-darwin install
 
+# Update dependencies
+update:
+	go get -u ./...
+
 # Refresh Go module dependencies
 refresh:
 	go mod tidy -v
@@ -31,7 +35,9 @@ test:
 
 # Build the project for Windows
 build:
+	cp internal/assets/windows/rsrc_windows_amd64.syso ./
 	go build -o bin/$(BINARY_NAME).exe -ldflags "$(LDFLAGS)" github.com/Benek2048/ZigzagDockerComposeMake
+	rm rsrc_windows_amd64.syso
 
 # Build the project for Linux
 build-linux:
