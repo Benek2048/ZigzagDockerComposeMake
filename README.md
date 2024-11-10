@@ -210,9 +210,10 @@ The program can operate in two modes:
 └── Makefile             # Compilation and testing scripts
 ```
 
+
 ## Project Compilation
 
-The project uses Makefile to automate the build process. The following commands are available:
+The project uses Makefile to automate the build process. The same Makefile is used both for local development and GitHub Actions automated builds defined in `.github/workflows/release.yml`. This ensures consistency between local and CI/CD environments.
 
 ### Basic commands:
 
@@ -229,6 +230,16 @@ make install      # Installs program in GOBIN path
 make build        # Compiles Windows version (bin/dcm.exe)
 make build-linux  # Compiles Linux version (bin/dcm)
 make build-rpi    # Compiles Raspberry Pi version (bin/dcm-rpi)
+make build-darwin # Compiles macOS version (bin/dcm-darwin-amd64, bin/dcm-darwin-arm64)
+```
+
+### CI/CD and maintenance commands:
+
+```bash
+make show_vars    # Displays current build variables (version, commit hash, etc.)
+make update       # Updates version numbers across the project
+make release      # Prepares a new release (updates version, builds all platforms)
+make clean        # Cleans up build artifacts and temporary files
 ```
 
 ### Additional commands:
@@ -241,9 +252,56 @@ make refresh      # Refreshes project dependencies (go mod tidy)
 
 - All binary versions are compiled with `-ldflags "-s -w"` flags to reduce file size
 - Raspberry Pi version is compiled with additional parameters:
-    - GOARCH='arm'
-    - GOARM='7'
-    - Using -trimpath flag
+  - GOARCH='arm'
+  - GOARM='7'
+  - Using -trimpath flag
+
+### Integration with GitHub Actions
+
+The Makefile is designed to work seamlessly with GitHub Actions CI/CD pipeline defined in `.github/workflows/release.yml`. When making changes to the Makefile, always ensure:
+
+1. Changes are compatible with both local development and GitHub Actions environment
+2. New commands or modifications are reflected in the GitHub workflow file
+3. Version handling remains consistent between local and CI builds
+4. Build artifacts are generated in the expected locations for GitHub releases
+
+
+
+### Prerequisites
+
+The most convenient way to build the Windows resources is using a Linux environment, preferably:
+- Native Linux system
+- WSL (Windows Subsystem for Linux) with Ubuntu 24.04 or later
+
+### Building the Resources
+
+#### Windows Icon
+When building the Windows version of the application, a special resource file `rsrc_windows_amd64.syso` is required to include the application icon in the executable. This file needs to be rebuilt if you modify the icon or other Windows-specific resources.
+
+
+1. If using WSL or Linux, ensure you have the required tools:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install mingw-w64
+   ```
+
+2. Navigate to the resource's directory:
+   ```bash
+   cd internal/assets/windows
+   ```
+
+3. Run the build script:
+   ```bash
+   ./build-resources.sh
+   ```
+
+   The script will:
+   - Check for required tools and install them if necessary
+   - Create or update the `rsrc_windows_amd64.syso` file
+   - Handle existing file conflicts
+
+After running the script, the `rsrc_windows_amd64.syso` file will be updated with the new icon. You can now build the Windows version of the application.
+
 
 ## License
 
