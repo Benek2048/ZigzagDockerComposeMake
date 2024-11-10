@@ -1,3 +1,9 @@
+##################################################################################
+# IMPORTANT: This Makefile is used both for local development and GitHub Actions #
+# automated builds. When making changes, ensure they are compatible with CI/CD   #
+# pipeline defined in .github/workflows/release.yml                              #
+##################################################################################
+
 # Makefile for building and testing the ZigzagDockerComposeMake project
 
 # Variables
