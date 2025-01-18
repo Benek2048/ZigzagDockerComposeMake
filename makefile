@@ -45,9 +45,10 @@ build:
 	go build -o bin/$(BINARY_NAME).exe -ldflags "$(LDFLAGS)" github.com/Benek2048/ZigzagDockerComposeMake
 	rm rsrc_windows_amd64.syso
 
-# Build the project for Linux
+# Build the project for Linux (both amd64 and arm64)
 build-linux:
-	GOOS=linux GOARCH=amd64 go build -o bin/$(BINARY_NAME) -ldflags "$(LDFLAGS)" github.com/Benek2048/ZigzagDockerComposeMake
+	GOOS=linux GOARCH=amd64 go build -o bin/$(BINARY_NAME)-linux-amd64 -ldflags "$(LDFLAGS)" github.com/Benek2048/ZigzagDockerComposeMake
+	GOOS=linux GOARCH=arm64 go build -o bin/$(BINARY_NAME)-linux-arm64 -ldflags "$(LDFLAGS)" github.com/Benek2048/ZigzagDockerComposeMake
 
 # Build the project for Raspberry Pi (ARM architecture)
 build-rpi:
@@ -71,7 +72,8 @@ clean:
 release:
 	cd bin && \
 	zip $(BINARY_NAME)-windows-amd64.zip $(BINARY_NAME).exe && \
-	tar czf $(BINARY_NAME)-linux-amd64.tar.gz $(BINARY_NAME) && \
+	tar czf $(BINARY_NAME)-linux-amd64.tar.gz $(BINARY_NAME)-linux-amd64 && \
+	tar czf $(BINARY_NAME)-linux-arm64.tar.gz $(BINARY_NAME)-linux-arm64 && \
 	tar czf $(BINARY_NAME)-linux-arm.tar.gz $(BINARY_NAME)-rpi && \
 	tar czf $(BINARY_NAME)-darwin-amd64.tar.gz $(BINARY_NAME)-darwin-amd64 && \
 	tar czf $(BINARY_NAME)-darwin-arm64.tar.gz $(BINARY_NAME)-darwin-arm64 && \

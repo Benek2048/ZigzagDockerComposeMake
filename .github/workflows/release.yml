@@ -45,9 +45,9 @@ jobs:
           mkdir -p bin
           # Build all platform versions using Makefile targets
           make build        # Windows version
-          make build-linux  # Linux version
+          make build-linux  # Linux versions (amd64 and arm64)
           make build-rpi    # Raspberry Pi version
-          make build-darwin # macOS versions (both Intel and Apple Silicon)
+          make build-darwin # macOS versions (Intel and Apple Silicon)
       
       # Step 6: Create release archives using Makefile
       - name: Create release archives
